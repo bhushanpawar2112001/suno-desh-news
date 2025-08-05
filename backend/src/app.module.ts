@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ArticlesModule } from './articles/articles.module';
 import { CategoriesModule } from './categories/categories.module';
+import { BreakingNewsModule } from './breaking-news/breaking-news.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
@@ -40,6 +41,7 @@ import { SeedModule } from './seed/seed.module';
     UsersModule,
     ArticlesModule,
     CategoriesModule,
+    BreakingNewsModule,
     SeedModule,
   ],
   controllers: [AppController],

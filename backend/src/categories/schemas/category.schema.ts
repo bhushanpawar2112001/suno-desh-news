@@ -25,6 +25,9 @@ export class Category {
 
   @Prop({ default: 0 })
   articleCount: number;
+
+  @Prop({ default: 1 })
+  rank: number;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category); 

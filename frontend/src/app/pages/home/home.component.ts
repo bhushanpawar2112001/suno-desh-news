@@ -10,14 +10,15 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { firstValueFrom } from 'rxjs';
 import { LanguageService } from '../../services/language.service';
-import { ApiService, Article, Category } from '../../services/api.service';
+import { ApiService, Article, Category, BreakingNews } from '../../services/api.service';
 import { AdBannerComponent } from '../../components/ad-banner/ad-banner.component';
+import { NewsCategoriesComponent } from '../../components/news-categories/news-categories.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatChipsModule, MatProgressSpinnerModule, MatIconModule, MatPaginatorModule, MatTabsModule, AdBannerComponent],
+  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatChipsModule, MatProgressSpinnerModule, MatIconModule, MatPaginatorModule, MatTabsModule, AdBannerComponent, NewsCategoriesComponent],
   template: `
     <div class="bg-white min-h-screen">
       <!-- Loading State -->
@@ -41,7 +42,7 @@ import { Subscription } from 'rxjs';
       <!-- Content -->
       <div *ngIf="!loading && !error">
         <!-- Breaking News Banner -->
-        <div class="breaking-news-banner">
+        <div class="breaking-news-banner" *ngIf="breakingNews.length > 0">
           <div class="container mx-auto px-4">
             <div class="breaking-content">
               <div class="breaking-label">
@@ -51,10 +52,10 @@ import { Subscription } from 'rxjs';
               <div class="breaking-ticker">
                 <span class="ticker-text">
                   <ng-container *ngIf="isEnglish(); else hindiBreaking">
-                    Major developments in technology sector as AI breakthrough announced • New sports records broken • Entertainment industry updates
+                    {{ getBreakingNewsText() }}
                   </ng-container>
                   <ng-template #hindiBreaking>
-                    प्रौद्योगिकी क्षेत्र में बड़े विकास के रूप में एआई सफलता की घोषणा • नए खेल रिकॉर्ड टूटे • मनोरंजन उद्योग अपडेट
+                    {{ getBreakingNewsTextHindi() }}
                   </ng-template>
                 </span>
               </div>
@@ -670,6 +671,9 @@ import { Subscription } from 'rxjs';
               </div>
             </div>
           </section>
+
+          <!-- News Categories Section -->
+          <app-news-categories></app-news-categories>
         </div>
       </div>
     </div>
@@ -860,6 +864,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   featuredArticles: Article[] = [];
   allArticles: Article[] = [];
   categories: Category[] = [];
+  breakingNews: BreakingNews[] = [];
   loading = true;
   error = false;
 
@@ -905,10 +910,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       const dataPromise = Promise.all([
         firstValueFrom(this.apiService.getFeaturedArticles()),
         firstValueFrom(this.apiService.getArticles()),
-        firstValueFrom(this.apiService.getCategories())
+        firstValueFrom(this.apiService.getCategories()),
+        firstValueFrom(this.apiService.getActiveBreakingNews())
       ]);
 
-      const [featuredArticles, allArticles, categories] = await Promise.race([dataPromise, timeoutPromise]) as [any[], any[], any[]];
+      const [featuredArticles, allArticles, categories, breakingNews] = await Promise.race([dataPromise, timeoutPromise]) as [any[], any[], any[], any[]];
       
       console.log('📦 Backend data received:', { 
         featuredArticles: featuredArticles?.length, 
@@ -934,6 +940,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.featuredArticles = featuredArticles || [];
       this.allArticles = allArticles || [];
       this.categories = categories || [];
+      this.breakingNews = breakingNews || [];
       this.totalArticles = this.allArticles.length;
       
       console.log('✅ All news data loaded successfully from backend');
@@ -1098,5 +1105,39 @@ export class HomeComponent implements OnInit, OnDestroy {
   getRandomComments(): number {
     // Generate a random number of comments between 5 and 150
     return Math.floor(Math.random() * 146) + 5;
+  }
+
+  getBreakingNewsText(): string {
+    if (!this.breakingNews || this.breakingNews.length === 0) {
+      return 'No breaking news available';
+    }
+    
+    // Get active breaking news and combine their content
+    const activeNews = this.breakingNews
+      .filter(news => news.isActive)
+      .sort((a, b) => a.priority - b.priority);
+    
+    if (activeNews.length === 0) {
+      return 'No breaking news available';
+    }
+    
+    return activeNews.map(news => news.content).join(' • ');
+  }
+
+  getBreakingNewsTextHindi(): string {
+    if (!this.breakingNews || this.breakingNews.length === 0) {
+      return 'कोई तोड़ने वाली खबर उपलब्ध नहीं है';
+    }
+    
+    // Get active breaking news and combine their content
+    const activeNews = this.breakingNews
+      .filter(news => news.isActive)
+      .sort((a, b) => a.priority - b.priority);
+    
+    if (activeNews.length === 0) {
+      return 'कोई तोड़ने वाली खबर उपलब्ध नहीं है';
+    }
+    
+    return activeNews.map(news => news.contentHindi).join(' • ');
   }
 } 

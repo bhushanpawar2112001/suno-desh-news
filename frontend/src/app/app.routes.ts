@@ -15,6 +15,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/category/category.component').then(m => m.CategoryComponent)
   },
   {
+    path: 'search',
+    loadComponent: () => import('./pages/search-results/search-results.component').then(m => m.SearchResultsComponent)
+  },
+  {
+    path: 'categories',
+    loadComponent: () => import('./pages/categories/categories.component').then(m => m.CategoriesComponent)
+  },
+  {
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
   },
@@ -59,6 +67,14 @@ export const routes: Routes = [
       {
         path: 'analytics',
         loadComponent: () => import('./components/traffic-dashboard/traffic-dashboard.component').then(m => m.TrafficDashboardComponent)
+      },
+      {
+        path: 'breaking-news',
+        loadComponent: () => import('./pages/admin/breaking-news/breaking-news.component').then(m => m.BreakingNewsComponent)
+      },
+      {
+        path: 'test',
+        loadComponent: () => import('./pages/admin/test-admin.component').then(m => m.TestAdminComponent)
       }
     ]
   },

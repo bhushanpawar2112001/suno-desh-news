@@ -1,27 +1,30 @@
 import { Component, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { LanguageService } from '../../services/language.service';
+import { WeatherWidgetComponent } from '../weather-widget/weather-widget.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, WeatherWidgetComponent],
   template: `
     <div class="header-wrapper">
       <!-- Top Bar -->
       <div class="top-bar">
         <div class="container">
           <div class="top-bar-content">
-            <div class="weather-info">
-              <span class="weather-icon">🌤️</span>
-              <span class="weather-text">28°C, Sunny</span>
-            </div>
+                         <div class="weather-info" (click)="toggleWeatherWidget()">
+               <span class="weather-icon">{{ getWeatherIcon() }}</span>
+               <span class="weather-text">{{ getWeatherText() }}</span>
+               <mat-icon class="weather-toggle-icon">expand_more</mat-icon>
+             </div>
             <div class="top-actions">
               <button class="language-toggle" (click)="toggleLanguage()">
                 <span class="lang-text">{{ getCurrentLanguageText() }}</span>
@@ -32,101 +35,84 @@ import { Subscription } from 'rxjs';
         </div>
       </div>
 
-      <!-- Main Header -->
-      <header class="main-header">
-        <div class="container">
-          <div class="header-content">
-            <!-- Logo Section -->
-            <div class="logo-section">
-              <a routerLink="/" class="logo-link">
-                <div class="logo-container">
-                  <div class="logo-icon">📰</div>
-                  <div class="logo-text">
-                    <h1 class="logo-title">
-                      <ng-container *ngIf="isEnglish(); else hindiLogo">
-                        SUNODESH
-                      </ng-container>
-                      <ng-template #hindiLogo>
-                        सुनोदेश
-                      </ng-template>
-                    </h1>
-                    <p class="logo-subtitle">
-                      <ng-container *ngIf="isEnglish(); else hindiSubtitle">
-                        Your Trusted News Source
-                      </ng-container>
-                      <ng-template #hindiSubtitle>
-                        आपका विश्वसनीय समाचार स्रोत
-                      </ng-template>
-                    </p>
-                  </div>
-                </div>
-              </a>
-            </div>
+             <!-- Main Header -->
+       <header class="main-header">
+         <div class="container">
+           <div class="header-content">
+             <!-- Logo Section -->
+             <div class="logo-section">
+               <a routerLink="/" class="logo-link">
+                 <div class="logo-container">
+                   <div class="logo-icon">📰</div>
+                   <div class="logo-text">
+                     <h1 class="logo-title">
+                       <ng-container *ngIf="isEnglish(); else hindiLogo">
+                         SUNODESH
+                       </ng-container>
+                       <ng-template #hindiLogo>
+                         सुनोदेश
+                       </ng-template>
+                     </h1>
+                     <p class="logo-subtitle">
+                       <ng-container *ngIf="isEnglish(); else hindiSubtitle">
+                         Your Trusted News Source
+                       </ng-container>
+                       <ng-template #hindiSubtitle>
+                         आपका विश्वसनीय समाचार स्रोत
+                       </ng-template>
+                     </p>
+                   </div>
+                 </div>
+               </a>
+             </div>
 
-            <!-- Search Section -->
-            <div class="search-section">
-              <div class="search-container">
-                <input type="text" placeholder="Search news..." class="search-input">
-                <button class="search-btn">
-                  <mat-icon>search</mat-icon>
+                           <!-- User Section -->
+              <div class="user-section">
+                <a routerLink="/categories" class="nav-btn categories-btn">
+                  <mat-icon>category</mat-icon>
+                </a>
+                <button class="notification-btn">
+                  <mat-icon>notifications</mat-icon>
+                  <span class="notification-badge">
+                    <ng-container *ngIf="isEnglish(); else hindiNotification">
+                      3
+                    </ng-container>
+                    <ng-template #hindiNotification>
+                      ३
+                    </ng-template>
+                  </span>
                 </button>
+                <a routerLink="/" class="home-btn">
+                  <mat-icon>home</mat-icon>
+                </a>
               </div>
-            </div>
+           </div>
+         </div>
+       </header>
 
-            <!-- User Section -->
-            <div class="user-section">
-              <button class="notification-btn">
-                <mat-icon>notifications</mat-icon>
-                <span class="notification-badge">
-                  <ng-container *ngIf="isEnglish(); else hindiNotification">
-                    3
-                  </ng-container>
-                  <ng-template #hindiNotification>
-                    ३
-                  </ng-template>
-                </span>
-              </button>
-              <button class="user-menu-btn">
-                <mat-icon>account_circle</mat-icon>
-              </button>
-            </div>
+       <!-- Search Bar Section -->
+       <div class="search-bar-section">
+         <div class="container">
+           <div class="search-container">
+             <input type="text" placeholder="Search news..." class="search-input" 
+                    [(ngModel)]="searchQuery" 
+                    (keyup.enter)="performSearch()"
+                    (input)="onSearchInput()">
+             <button class="search-btn" (click)="performSearch()">
+               <mat-icon>search</mat-icon>
+             </button>
+           </div>
+         </div>
+       </div>
 
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <!-- Mobile Navigation -->
-      <div *ngIf="mobileMenuOpen" class="mobile-nav">
-        <div class="mobile-nav-content">
-          <div class="mobile-search">
-            <input type="text" placeholder="Search news..." class="mobile-search-input">
-            <button class="mobile-search-btn">
-              <mat-icon>search</mat-icon>
-            </button>
-          </div>
-          <ul class="mobile-nav-list">
-            <li class="mobile-nav-item">
-              <a routerLink="/" class="mobile-nav-link" (click)="closeMobileMenu()">
-                <mat-icon>home</mat-icon>
-                <span>
-                  <ng-container *ngIf="isEnglish(); else hindiHomeMobile">
-                    HOME
-                  </ng-container>
-                  <ng-template #hindiHomeMobile>
-                    होम
-                  </ng-template>
-                </span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
+      
+      
+      <!-- Weather Widget -->
+      <app-weather-widget 
+        [showWeather]="weatherWidgetOpen" 
+        (weatherToggle)="onWeatherToggle($event)"
+        (weatherDataUpdate)="updateWeatherData($event)">
+      </app-weather-widget>
     </div>
   `,
   styles: [`
@@ -164,6 +150,27 @@ import { Subscription } from 'rxjs';
       color: #475569;
       font-size: 14px;
       font-weight: 500;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .weather-info:hover {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+
+    .weather-toggle-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-left: 5px;
+      transition: transform 0.3s ease;
+    }
+
+    .weather-info:hover .weather-toggle-icon {
+      transform: rotate(180deg);
     }
 
     .weather-icon {
@@ -210,12 +217,11 @@ import { Subscription } from 'rxjs';
       border-bottom: 1px solid #e2e8f0;
     }
 
-    .header-content {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 30px;
-      align-items: center;
-    }
+         .header-content {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+     }
 
     /* Logo Section */
     .logo-link {
@@ -260,50 +266,58 @@ import { Subscription } from 'rxjs';
       letter-spacing: 1px;
     }
 
-    /* Search Section */
-    .search-container {
-      position: relative;
-      width: 400px;
-    }
+         /* Search Bar Section */
+     .search-bar-section {
+       background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+       padding: 15px 0;
+       border-bottom: 1px solid #e2e8f0;
+     }
 
-    .search-input {
-      width: 100%;
-      padding: 12px 50px 12px 20px;
-      border: 2px solid #e2e8f0;
-      border-radius: 25px;
-      font-size: 14px;
-      background: white;
-      transition: all 0.3s ease;
-    }
+     .search-container {
+       position: relative;
+       max-width: 600px;
+       margin: 0 auto;
+     }
 
-    .search-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
+     .search-input {
+       width: 100%;
+       padding: 15px 60px 15px 25px;
+       border: 2px solid #e2e8f0;
+       border-radius: 30px;
+       font-size: 16px;
+       background: white;
+       transition: all 0.3s ease;
+       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+     }
 
-    .search-btn {
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+     .search-input:focus {
+       outline: none;
+       border-color: #3b82f6;
+       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 15px rgba(0, 0, 0, 0.15);
+     }
 
-    .search-btn:hover {
-      transform: translateY(-50%) scale(1.1);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
+     .search-btn {
+       position: absolute;
+       right: 8px;
+       top: 50%;
+       transform: translateY(-50%);
+       background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+       color: white;
+       border: none;
+       border-radius: 50%;
+       width: 45px;
+       height: 45px;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+     }
+
+     .search-btn:hover {
+       transform: translateY(-50%) scale(1.1);
+       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+     }
 
     /* User Section */
     .user-section {
@@ -349,131 +363,43 @@ import { Subscription } from 'rxjs';
       font-weight: 700;
     }
 
-    .user-menu-btn {
-      background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
-      color: white !important;
-      border-radius: 50% !important;
-      width: 45px !important;
-      height: 45px !important;
-      transition: all 0.3s ease !important;
-    }
+         .home-btn {
+       background: linear-gradient(135deg, #10b981, #059669) !important;
+       color: white !important;
+       border-radius: 50% !important;
+       width: 45px !important;
+       height: 45px !important;
+       transition: all 0.3s ease !important;
+       display: flex !important;
+       align-items: center !important;
+       justify-content: center !important;
+       text-decoration: none !important;
+     }
 
-    .user-menu-btn:hover {
-      transform: scale(1.1) !important;
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
-    }
+           .home-btn:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+      }
 
-    /* Mobile Menu Button */
-    .mobile-menu-btn {
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 10px;
-    }
+      .nav-btn {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+        color: white !important;
+        border-radius: 50% !important;
+        width: 45px !important;
+        height: 45px !important;
+        transition: all 0.3s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-decoration: none !important;
+      }
 
-    .mobile-menu-btn span {
-      width: 25px;
-      height: 3px;
-      background: #1e293b;
-      border-radius: 2px;
-      transition: all 0.3s ease;
-    }
+      .nav-btn:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+      }
 
-    .mobile-menu-btn:hover span {
-      background: #3b82f6;
-    }
-
-    /* Mobile Navigation */
-    .mobile-nav {
-      background: white;
-      border-top: 1px solid #e2e8f0;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    .mobile-nav-content {
-      padding: 20px;
-    }
-
-    .mobile-search {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .mobile-search-input {
-      flex: 1;
-      padding: 12px 15px;
-      border: 2px solid #e2e8f0;
-      border-radius: 25px;
-      font-size: 14px;
-    }
-
-    .mobile-search-btn {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 45px;
-      height: 45px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .mobile-nav-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .mobile-nav-item {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .mobile-nav-link {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 20px 15px;
-      color: #374151;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .mobile-nav-link:hover {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    .mobile-nav-link mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-
-    .mobile-nav-link span {
-      font-size: 12px;
-      font-weight: 600;
-    }
+    
 
     /* User Menu */
     .user-menu {
@@ -494,70 +420,67 @@ import { Subscription } from 'rxjs';
       color: #3b82f6;
     }
 
-    /* Responsive Design */
-    @media (max-width: 1024px) {
-      .container {
-        padding: 0 15px;
-      }
-      
-      .search-container {
-        width: 300px;
-      }
-      
-      .logo-title {
-        font-size: 28px;
-      }
-      
-      .logo-icon {
-        font-size: 35px;
-      }
-    }
+         /* Responsive Design */
+     @media (max-width: 1024px) {
+       .container {
+         padding: 0 15px;
+       }
+       
+       .search-container {
+         max-width: 500px;
+       }
+       
+       .logo-title {
+         font-size: 28px;
+       }
+       
+       .logo-icon {
+         font-size: 35px;
+       }
+     }
 
-    @media (max-width: 768px) {
-      .header-content {
-        grid-template-columns: 1fr auto;
-        gap: 15px;
-      }
+     @media (max-width: 768px) {
+       .header-content {
+         gap: 15px;
+       }
 
-      .search-section {
-        display: none;
-      }
+       .logo-title {
+         font-size: 24px;
+       }
 
-      .user-section {
-        gap: 10px;
-      }
+       .logo-subtitle {
+         font-size: 10px;
+       }
 
-      .logo-title {
-        font-size: 24px;
-      }
+       .top-bar-content {
+         flex-direction: column;
+         gap: 8px;
+         text-align: center;
+       }
 
-      .logo-subtitle {
-        font-size: 10px;
-      }
+       .weather-info {
+         font-size: 12px;
+       }
 
-      .nav-list {
-        display: none;
-      }
+       .language-toggle {
+         padding: 6px 12px;
+         font-size: 12px;
+       }
 
-      .mobile-menu-btn {
-        display: flex;
-      }
+       .search-container {
+         max-width: 400px;
+       }
 
-      .top-bar-content {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-      }
+       .search-input {
+         padding: 12px 50px 12px 20px;
+         font-size: 14px;
+       }
 
-      .weather-info {
-        font-size: 12px;
-      }
-
-      .language-toggle {
-        padding: 6px 12px;
-        font-size: 12px;
-      }
-    }
+       .search-btn {
+         width: 40px;
+         height: 40px;
+       }
+     }
 
     @media (max-width: 480px) {
       .container {
@@ -667,7 +590,9 @@ import { Subscription } from 'rxjs';
   `]
 })
 export class HeaderComponent implements OnDestroy {
-  mobileMenuOpen = false;
+  weatherWidgetOpen = false;
+  currentWeather: any = null;
+  searchQuery = '';
   private languageSubscription: Subscription;
 
   constructor(
@@ -684,13 +609,7 @@ export class HeaderComponent implements OnDestroy {
     this.languageSubscription.unsubscribe();
   }
 
-  toggleMobileMenu(): void {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
-  }
 
-  closeMobileMenu(): void {
-    this.mobileMenuOpen = false;
-  }
 
   toggleLanguage(): void {
     this.languageService.toggleLanguage();
@@ -702,5 +621,48 @@ export class HeaderComponent implements OnDestroy {
 
   isEnglish(): boolean {
     return this.languageService.isEnglish();
+  }
+
+  toggleWeatherWidget(): void {
+    this.weatherWidgetOpen = !this.weatherWidgetOpen;
+  }
+
+  onWeatherToggle(isOpen: boolean): void {
+    this.weatherWidgetOpen = isOpen;
+  }
+
+  getWeatherIcon(): string {
+    if (!this.currentWeather) return '🌤️';
+    
+    const iconMap: { [key: string]: string } = {
+      'wb_sunny': '☀️',
+      'cloud': '☁️',
+      'grain': '🌧️',
+      'ac_unit': '❄️',
+      'thunderstorm': '⛈️'
+    };
+    return iconMap[this.currentWeather.icon] || '🌤️';
+  }
+
+  getWeatherText(): string {
+    if (!this.currentWeather) return '28°C, Sunny';
+    return `${this.currentWeather.temperature}°C, ${this.currentWeather.description}`;
+  }
+
+  updateWeatherData(weatherData: any): void {
+    this.currentWeather = weatherData;
+  }
+
+  performSearch(): void {
+    if (this.searchQuery.trim()) {
+      // Navigate to search results page with query
+      this.router.navigate(['/search'], { queryParams: { q: this.searchQuery.trim() } });
+      this.searchQuery = ''; // Clear search after performing
+    }
+  }
+
+  onSearchInput(): void {
+    // Real-time search suggestions could be implemented here
+    // For now, just handle the input event
   }
 } 

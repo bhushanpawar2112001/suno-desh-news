@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { Category, CategoryDocument } from '../categories/schemas/category.schema';
 import { Article, ArticleDocument } from '../articles/schemas/article.schema';
+import { BreakingNews, BreakingNewsDocument } from '../breaking-news/breaking-news.schema';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class SeedService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
     @InjectModel(Article.name) private articleModel: Model<ArticleDocument>,
+    @InjectModel(BreakingNews.name) private breakingNewsModel: Model<BreakingNewsDocument>,
   ) {}
 
   async seedData() {
@@ -22,6 +24,7 @@ export class SeedService {
       await this.userModel.deleteMany({});
       await this.categoryModel.deleteMany({});
       await this.articleModel.deleteMany({});
+      await this.breakingNewsModel.deleteMany({});
 
       // Create admin user
       const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -53,6 +56,7 @@ export class SeedService {
           description: 'Latest political news and updates',
           descriptionHindi: 'नवीनतम राजनीतिक समाचार और अपडेट',
           isActive: true,
+          rank: 1,
         },
         {
           name: 'Technology',
@@ -61,6 +65,7 @@ export class SeedService {
           description: 'Technology news and innovations',
           descriptionHindi: 'प्रौद्योगिकी समाचार और नवाचार',
           isActive: true,
+          rank: 2,
         },
         {
           name: 'Business',
@@ -69,6 +74,7 @@ export class SeedService {
           description: 'Business and economic news',
           descriptionHindi: 'व्यापार और आर्थिक समाचार',
           isActive: true,
+          rank: 3,
         },
         {
           name: 'Sports',
@@ -77,6 +83,7 @@ export class SeedService {
           description: 'Sports news and updates',
           descriptionHindi: 'खेल समाचार और अपडेट',
           isActive: true,
+          rank: 4,
         },
         {
           name: 'Entertainment',
@@ -85,6 +92,7 @@ export class SeedService {
           description: 'Entertainment and celebrity news',
           descriptionHindi: 'मनोरंजन और सेलिब्रिटी समाचार',
           isActive: true,
+          rank: 5,
         },
         {
           name: 'Health',
@@ -93,6 +101,7 @@ export class SeedService {
           description: 'Health and medical news',
           descriptionHindi: 'स्वास्थ्य और चिकित्सा समाचार',
           isActive: true,
+          rank: 6,
         },
       ]);
 
@@ -257,6 +266,36 @@ export class SeedService {
 
       await this.articleModel.create(articles);
 
+      // Create breaking news
+      const breakingNews = [
+        {
+          title: 'Major developments in technology sector as AI breakthrough announced',
+          titleHindi: 'प्रौद्योगिकी क्षेत्र में बड़े विकास के रूप में एआई सफलता की घोषणा',
+          content: 'New AI breakthrough announced in technology sector • New sports records broken • Entertainment industry updates',
+          contentHindi: 'प्रौद्योगिकी क्षेत्र में नई एआई सफलता की घोषणा • नए खेल रिकॉर्ड टूटे • मनोरंजन उद्योग अपडेट',
+          isActive: true,
+          priority: 1
+        },
+        {
+          title: 'Breaking: Major sports records broken in championship finals',
+          titleHindi: 'तोड़ने वाली खबर: चैम्पियनशिप फाइनल में बड़े खेल रिकॉर्ड टूटे',
+          content: 'New sports records broken in championship finals • Technology sector updates • Business news highlights',
+          contentHindi: 'चैम्पियनशिप फाइनल में नए खेल रिकॉर्ड टूटे • प्रौद्योगिकी क्षेत्र अपडेट • व्यापार समाचार के मुख्य आकर्षण',
+          isActive: true,
+          priority: 2
+        },
+        {
+          title: 'Entertainment industry updates and celebrity news',
+          titleHindi: 'मनोरंजन उद्योग अपडेट और सेलिब्रिटी समाचार',
+          content: 'Entertainment industry updates • Technology breakthroughs • Sports highlights',
+          contentHindi: 'मनोरंजन उद्योग अपडेट • प्रौद्योगिकी सफलताएं • खेल के मुख्य आकर्षण',
+          isActive: false,
+          priority: 3
+        }
+      ];
+
+      await this.breakingNewsModel.create(breakingNews);
+
       // Update category article counts
       for (const category of categories) {
         const articleCount = await this.articleModel.countDocuments({ category: category._id });
@@ -264,7 +303,7 @@ export class SeedService {
       }
 
       console.log('✅ Database seeding completed successfully!');
-      console.log(`📊 Created: ${categories.length} categories, ${articles.length} articles, 2 users`);
+      console.log(`📊 Created: ${categories.length} categories, ${articles.length} articles, ${breakingNews.length} breaking news, 2 users`);
       
     } catch (error) {
       console.error('❌ Error seeding database:', error);
