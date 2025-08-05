@@ -55,6 +55,10 @@ export const routes: Routes = [
       {
         path: 'users/create',
         loadComponent: () => import('./pages/admin/users/create-user.component').then(m => m.CreateUserComponent)
+      },
+      {
+        path: 'analytics',
+        loadComponent: () => import('./components/traffic-dashboard/traffic-dashboard.component').then(m => m.TrafficDashboardComponent)
       }
     ]
   },
